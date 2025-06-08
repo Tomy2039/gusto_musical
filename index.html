@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tu estilo musical</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="number"] {
+      width: 50px;
+      margin-left: 10px;
+    }
+    #result {
+      margin-top: 30px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Calificá las bandas musicales (1 a 10)</h1>
+  <form id="ratingForm">
+    <label>Nirvana <input type="number" name="band" min="1" max="10" required /></label>
+    <label>Nine Inch Nails <input type="number" name="band" min="1" max="10" required /></label>
+    <label>Backstreet Boys <input type="number" name="band" min="1" max="10" required /></label>
+    <label>N Sync <input type="number" name="band" min="1" max="10" required /></label>
+    <label>Night Club <input type="number" name="band" min="1" max="10" required /></label>
+    <label>Apashe <input type="number" name="band" min="1" max="10" required /></label>
+    <label>STP <input type="number" name="band" min="1" max="10" required /></label>
+    <button type="submit">Procesar información</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    const features = ['Grunge', 'Rock', 'Industrial', 'Boy Band', 'Dance', 'Techno']
+    
+    const band_feats = tf.tensor([
+      [1, 1, 0, 0, 0, 0], // Nirvana
+      [1, 0, 1, 0, 0, 0], // Nine Inch Nails
+      [0, 0, 0, 1, 1, 0], // Backstreet Boys
+      [0, 0, 0, 1, 0, 0], // N Sync
+      [0, 0, 1, 0, 0, 1], // Night Club
+      [0, 0, 1, 0, 0, 1], // Apashe
+      [1, 1, 0, 0, 0, 0], // STP
+    ])
+
+    document.getElementById("ratingForm").addEventListener("submit", function(e) {
+      e.preventDefault()
+
+      const inputs = Array.from(document.getElementsByName("band"))
+      const ratings = inputs.map(input => parseInt(input.value))
+
+      tf.tidy(() => {
+        const user_votes = tf.tensor2d([ratings])
+        const user_feats = tf.matMul(user_votes, band_feats)
+        const top_user_features = tf.topk(user_feats, features.length)
+        const top_genres = top_user_features.indices.arraySync()[0]
+        const rankedCategories = top_genres.map(v => features[v])
+
+        // Mostrar resultados
+        document.getElementById("result").innerHTML = `
+          <h2>Según tus gustos, tus estilos musicales favoritos son:</h2>
+          <ol>${rankedCategories.map(cat => `<li>${cat}</li>`).join('')}</ol>
+        `
+      })
+    })
+  </script>
+</body>
+</html>
